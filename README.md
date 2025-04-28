@@ -1,6 +1,6 @@
 # Lava Lamp PIV (Particle Image Velocimetry)
 
-![Lava Lamp PIV Demo](/api/placeholder/800/400 "Lava Lamp PIV in action")
+![Lava Lamp PIV](/examples/PIV/lava "Lava Lamp PIV")
 
 ## Overview
 
