@@ -12,9 +12,7 @@ The system captures images from a webcam, processes them using OpenPIV algorithm
 
 - **Real-time image capture** from webcam
 - **PIV processing** to calculate velocity fields between image pairs
-- **Vector field visualization** with customizable display options
-- **Modular architecture** for easy extension and modification
-- **Educational tool** for fluid dynamics demonstrations
+- **And Vector field visualization**
 
 ## Project Structure
 

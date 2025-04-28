@@ -4,8 +4,8 @@ import numpy as np
 from skimage.io import imread
 
 # load the images
-a = imread("B006_1.tif")
-b = imread("B006_2.tif")
+a = imread("frame_1.tif")
+b = imread("frame_2.tif")
 
 fig, axs = plt.subplots(1, 2, figsize=(9, 4))
 axs[0].imshow(a, cmap=plt.cm.gray)
