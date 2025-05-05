@@ -7,8 +7,15 @@ from scipy.signal import correlate
 import tempfile
 from matplotlib.animation import FuncAnimation
 
+# Configuration variables
+# Adjust these variables to customize the PIV analysis
+
+# Maximum vector size filter: vectors with magnitude larger than this will be removed
+# Set to None to disable filtering
+MAX_VECTOR_SIZE = 13  # Default value, adjust based on your specific video and flow characteristics
+
 class VideoFramePIVProcessor:
-    def __init__(self, win_size=32):
+    def __init__(self, win_size=32, max_vector_size=None):
         """
         Initialize the PIV processor for video frames
         
@@ -16,8 +23,11 @@ class VideoFramePIVProcessor:
         -----------
         win_size : int
             Size of interrogation window
+        max_vector_size : float or None
+            Maximum allowed vector magnitude for filtering, None for no filtering
         """
         self.win_size = win_size
+        self.max_vector_size = max_vector_size
         
     def process_frame_pair(self, frame1, frame2):
         """
@@ -70,9 +80,16 @@ class VideoFramePIVProcessor:
         # Calculate magnitude
         norm_drs = np.sqrt(dxs**2 + dys**2)
         
+        # Filter out vectors that exceed the maximum size if specified
+        if self.max_vector_size is not None:
+            mask = norm_drs > self.max_vector_size
+            dxs[mask] = np.nan
+            dys[mask] = np.nan
+            norm_drs[mask] = np.nan
+            
         return xs_mesh, ys_mesh, dxs, dys, norm_drs
 
-def process_video_file(video_path, win_size=32, skip_frames=1, save_output=None, display=True):
+def process_video_file(video_path, win_size=32, skip_frames=1, save_output=None, display=True, max_vector_size=None):
     """
     Process a video file using PIV analysis
     
@@ -88,6 +105,8 @@ def process_video_file(video_path, win_size=32, skip_frames=1, save_output=None,
         Path to save output video, or None to not save
     display : bool
         Whether to display the results in real time
+    max_vector_size : float or None
+        Maximum allowed vector magnitude for filtering, None for no filtering
     """
     # Initialize video capture
     cap = cv2.VideoCapture(video_path)
@@ -104,7 +123,7 @@ def process_video_file(video_path, win_size=32, skip_frames=1, save_output=None,
     print(f"Video properties: {frame_width}x{frame_height}, {fps} fps, {total_frames} frames")
     
     # Initialize PIV processor
-    piv_processor = VideoFramePIVProcessor(win_size=win_size)
+    piv_processor = VideoFramePIVProcessor(win_size=win_size, max_vector_size=max_vector_size)
     
     # Initialize output video writer if requested
     out = None
@@ -163,19 +182,19 @@ def process_video_file(video_path, win_size=32, skip_frames=1, save_output=None,
             # Don't reverse the y-coordinates, but adjust for image coordinate system
             # In image coordinates, y increases downward, but in the plot, y increases upward
             q = plt.quiver(
-                xs, 
-                ys,  # Don't invert the y-coordinates 
-                dxs, 
-                dys,  # Don't negate the y displacements
-                norm_drs,
-                cmap="plasma",
+                xs,
+                ys,
+                dxs,
+                dys,
+                color='red',  # All vectors colored red
                 angles="xy",
                 scale_units="xy",
                 scale=0.25
             )
             
-            plt.colorbar(q, label="Displacement magnitude")
-            plt.title(f"PIV Result - Frame {frame_count}")
+            # Add filtering information to title
+            filter_info = f" (Filtered: max magnitude = {max_vector_size})" if max_vector_size is not None else ""
+            plt.title(f"PIV Result - Frame {frame_count}{filter_info}")
             plt.xlabel("X")
             plt.ylabel("Y")
             
@@ -208,6 +227,13 @@ def process_video_file(video_path, win_size=32, skip_frames=1, save_output=None,
         plt.show()
         
     print(f"\nFinished processing {processed_count} PIV frame pairs.")
+    if max_vector_size is not None:
+        print(f"Vectors with magnitude > {max_vector_size} were filtered out.")
+
+# Define a variable for maximum vector size filter
+# Adjust this value to filter out vectors with magnitude greater than this threshold
+# Set to None to disable filtering
+MAX_VECTOR_SIZE = 15  # Example value, adjust based on your specific needs
 
 def main():
     # Parse command line arguments
@@ -217,6 +243,8 @@ def main():
     parser.add_argument('--skip', type=int, default=0, help='Number of frames to skip between analyzed pairs')
     parser.add_argument('--save', default=None, help='Path to save output video')
     parser.add_argument('--no-display', action='store_true', help='Disable real-time display')
+    parser.add_argument('--max-vector', type=float, default=MAX_VECTOR_SIZE, 
+                        help='Maximum vector magnitude to display (filters larger vectors)')
     
     args = parser.parse_args()
     
@@ -226,7 +254,8 @@ def main():
         win_size=args.win_size,
         skip_frames=args.skip,
         save_output=args.save,
-        display=not args.no_display
+        display=not args.no_display,
+        max_vector_size=args.max_vector
     )
 
 if __name__ == "__main__":

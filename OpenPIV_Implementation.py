@@ -4,13 +4,13 @@ import numpy as np
 from skimage.io import imread
 
 # load the images
-a = imread("frame_1.tif")
-b = imread("frame_2.tif")
+a = imread("image_1.png")
+b = imread("image_2.png")
 
 fig, axs = plt.subplots(1, 2, figsize=(9, 4))
 axs[0].imshow(a, cmap=plt.cm.gray)
 axs[1].imshow(b, cmap=plt.cm.gray)
-plt.show()
+plt.show()d
 
 win_size = 32
 
